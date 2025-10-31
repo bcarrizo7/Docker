@@ -1140,15 +1140,66 @@ docker buildx build --platform linux/amd64,linux/arm64 -t usuario/miapp:1.0 --pu
     }
 
     // Copiar al portapapeles
+    const extractCommands = (text) => {
+      return text
+        .split('\n')
+        .map(line => {
+          if (!line.trim() || line.trim().startsWith('#')) {
+            return null;
+          }
+
+          let cleaned = '';
+          let inSingle = false;
+          let inDouble = false;
+          let inBacktick = false;
+
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const prevChar = i > 0 ? line[i - 1] : '';
+
+            if (char === "'" && prevChar !== '\\' && !inDouble && !inBacktick) {
+              inSingle = !inSingle;
+              cleaned += char;
+              continue;
+            }
+
+            if (char === '"' && prevChar !== '\\' && !inSingle && !inBacktick) {
+              inDouble = !inDouble;
+              cleaned += char;
+              continue;
+            }
+
+            if (char === '`' && prevChar !== '\\' && !inSingle && !inDouble) {
+              inBacktick = !inBacktick;
+              cleaned += char;
+              continue;
+            }
+
+            if (char === '#' && !inSingle && !inDouble && !inBacktick) {
+              break;
+            }
+
+            cleaned += char;
+          }
+
+          const result = cleaned.replace(/\s+$/,'');
+          return result ? result : null;
+        })
+        .filter(Boolean)
+        .join('\n');
+    };
+
     document.querySelectorAll('pre .copy').forEach(btn=>{
       btn.addEventListener('click', async e => {
         const code = e.target.parentElement.querySelector('code').innerText;
-        try{ 
-          await navigator.clipboard.writeText(code); 
-          btn.classList.add('copied'); 
-          btn.textContent='✓ copiado'; 
+        const commands = extractCommands(code);
+        const textToCopy = commands || code;
+        try{
+          await navigator.clipboard.writeText(textToCopy);
+          btn.classList.add('copied');
+          btn.textContent='✓ copiado';
           setTimeout(()=>{
-            btn.classList.remove('copied'); 
+            btn.classList.remove('copied');
             btn.textContent='copiar'
           },1500);
         }catch(err){
