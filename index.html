@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Docker Fastlane – Aprende Docker en 90 minutos</title>
+  <meta name="description" content="Chuleta interactiva + mini curso práctico de Docker con ejemplos listos para copiar." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0a0e1a;
+      --bg-2: #0f1422;
+      --panel: rgba(255,255,255,0.03);
+      --panel-glow: rgba(102,224,209,0.08);
+      --panel-strong: rgba(255,255,255,0.1);
+      --text: #e7edf7;
+      --muted: #8b95b0;
+      --brand: #00ffcc;
+      --brand-2: #00d4ff;
+      --accent: #ff006e;
+      --accent-2: #8338ec;
+      --ok: #00ffa3;
+      --warn: #ffb700;
+      --err: #ff1744;
+      --radius: 20px;
+      --shadow: 0 8px 32px rgba(0,0,0,.4);
+      --glow: 0 0 20px rgba(0,255,204,.3);
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    
+    *{box-sizing: border-box}
+    html,body{height:100%; scroll-behavior: smooth}
+    
+    body{
+      margin:0; 
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: 
+        radial-gradient(ellipse 1400px 800px at 20% -20%, rgba(0,255,204,.12), transparent 50%),
+        radial-gradient(ellipse 1200px 700px at 80% 120%, rgba(255,0,110,.08), transparent 50%),
+        radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(131,56,236,.06), transparent 60%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    
+    /* Animated background with containers and whales */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(0,255,204,.03) 1px, transparent 1px),
+        radial-gradient(circle at 80% 60%, rgba(255,0,110,.03) 1px, transparent 1px),
+        radial-gradient(circle at 40% 80%, rgba(0,212,255,.03) 1px, transparent 1px);
+      background-size: 50px 50px, 80px 80px, 60px 60px;
+      background-position: 0 0, 40px 40px, 20px 20px;
+      pointer-events: none;
+      animation: float 20s ease-in-out infinite;
+      z-index: 1;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(20px, 20px); }
+    }
+    
+    /* Animated emojis background */
+    .emoji-bg {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    
+    .emoji {
+      position: absolute;
+      font-size: 2rem;
+      opacity: 0.15;
+      animation: floatEmoji linear infinite;
+    }
+    
+    @keyframes floatEmoji {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.15;
+      }
+      90% {
+        opacity: 0.15;
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    
+    .emoji.whale {
+      filter: hue-rotate(180deg);
+    }
+    
+    @keyframes floatEmojiReverse {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.12;
+      }
+      90% {
+        opacity: 0.12;
+      }
+      100% {
+        transform: translateY(100vh) rotate(-360deg);
+        opacity: 0;
+      }
+    }
+    
+    a{color:var(--brand-2); text-decoration: none; transition: all .3s ease}
+    a:hover{color: var(--brand); text-shadow: 0 0 8px var(--brand)}
+    
+    header{
+      position: sticky; 
+      top:0; 
+      z-index: 100; 
+      backdrop-filter: blur(20px) saturate(180%);
+      background: linear-gradient(180deg, rgba(10,14,26,.95), rgba(10,14,26,.85));
+      border-bottom: 1px solid rgba(0,255,204,.2);
+      box-shadow: 0 4px 30px rgba(0,0,0,.3), 0 0 0 1px rgba(0,255,204,.1) inset;
+    }
+    
+    .wrap{max-width: 1400px; margin: 0 auto; padding: 16px 24px; position: relative; z-index: 2}
+    
+    .brand{display:flex; gap:14px; align-items:center; animation: slideInLeft .6s ease}
+    
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .logo{
+      width:44px; 
+      height:44px; 
+      border-radius:12px; 
+      background: 
+        linear-gradient(135deg, var(--brand), var(--brand-2), var(--accent));
+      box-shadow: 
+        0 0 20px rgba(0,255,204,.4),
+        0 4px 12px rgba(0,0,0,.3),
+        inset 0 1px 0 rgba(255,255,255,.2);
+      position: relative;
+      animation: pulse 3s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    
+    .logo::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, transparent, rgba(255,255,255,.1));
+      opacity: .5;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(0,255,204,.4), 0 4px 12px rgba(0,0,0,.3); }
+      50% { box-shadow: 0 0 30px rgba(0,255,204,.6), 0 4px 12px rgba(0,0,0,.3); }
+    }
+    
+    h1{
+      margin:0; 
+      font-size: clamp(22px, 3vw, 32px); 
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .layout{
+      display:grid; 
+      grid-template-columns: 300px 1fr; 
+      gap:28px; 
+      padding: 28px 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    @media (max-width: 1024px){ 
+      .layout{grid-template-columns: 1fr; padding: 20px 16px} 
+      nav{position: relative !important; top: 0 !important}
+    }
+
+    nav{
+      position: sticky; 
+      top:90px; 
+      align-self: start; 
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border:1px solid var(--panel-strong); 
+      border-radius: var(--radius); 
+      padding: 18px; 
+      box-shadow: var(--shadow), 0 0 0 1px rgba(0,255,204,.1) inset;
+      animation: slideInRight .6s ease;
+    }
+    
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    nav h3{
+      margin:4px 0 14px; 
+      font-size: 13px; 
+      text-transform: uppercase; 
+      letter-spacing: .15em; 
+      color: var(--brand);
+      font-weight: 600;
+    }
+    
+    nav input{
+      width:100%; 
+      padding:12px 16px; 
+      border-radius: 14px; 
+      border:1px solid var(--panel-strong); 
+      background: rgba(0,0,0,.3); 
+      color: var(--text);
+      font-family: inherit;
+      transition: all .3s ease;
+      outline: none;
+    }
+    
+    nav input:focus{
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(0,255,204,.1), 0 0 12px rgba(0,255,204,.2);
+    }
+    
+    nav ul{
+      list-style:none; 
+      padding: 14px 0 0; 
+      margin:0; 
+      display:flex; 
+      flex-direction: column; 
+      gap: 6px; 
+      max-height: 60vh; 
+      overflow:auto;
+    }
+    
+    nav ul::-webkit-scrollbar{width: 6px}
+    nav ul::-webkit-scrollbar-track{background: rgba(0,0,0,.2); border-radius: 10px}
+    nav ul::-webkit-scrollbar-thumb{background: var(--panel-strong); border-radius: 10px}
+    nav ul::-webkit-scrollbar-thumb:hover{background: var(--brand)}
+    
+    nav li a{
+      display:block; 
+      padding:10px 14px; 
+      border-radius:12px; 
+      border:1px solid transparent;
+      transition: all .3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    nav li a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 3px;
+      background: var(--brand);
+      transform: scaleY(0);
+      transition: transform .3s ease;
+    }
+    
+    nav li a:hover, nav li a.active{
+      background: var(--panel-glow); 
+      border-color: rgba(0,255,204,.3);
+      transform: translateX(4px);
+    }
+    
+    nav li a.active::before {
+      transform: scaleY(1);
+    }
+
+    .hero{
+      display:grid; 
+      gap:20px; 
+      grid-template-columns: 1.1fr .9fr; 
+      align-items: start; 
+      padding: 0 0 20px;
+      animation: fadeInUp .8s ease;
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .hero p{margin:0 0 12px}
+    .hero .card{padding: 24px}
+    
+    @media (max-width: 1024px){ .hero{grid-template-columns: 1fr} }
+
+    .badge{
+      font-size:11px; 
+      padding:6px 12px; 
+      border-radius:999px; 
+      border:1px solid var(--panel-strong); 
+      background: linear-gradient(135deg, var(--panel), rgba(0,255,204,.05));
+      display:inline-flex; 
+      gap:8px; 
+      align-items:center;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(0,255,204,.1);
+    }
+
+    .grid{display:grid; grid-template-columns: repeat(12, 1fr); gap: 20px}
+    
+    .card{
+      grid-column: span 12; 
+      padding:24px; 
+      border-radius: var(--radius); 
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border:1px solid var(--panel-strong); 
+      box-shadow: var(--shadow), 0 0 0 1px rgba(0,255,204,.05) inset;
+      transition: all .4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,255,204,.05), transparent);
+      transition: left .6s ease;
+    }
+    
+    .card:hover::before {
+      left: 100%;
+    }
+    
+    .card:hover{
+      border-color: rgba(0,255,204,.3);
+      box-shadow: var(--shadow), 0 0 20px rgba(0,255,204,.1), 0 0 0 1px rgba(0,255,204,.1) inset;
+      transform: translateY(-2px);
+    }
+
+    h2{
+      margin:0 0 16px; 
+      font-size: clamp(20px, 2.5vw, 28px);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--text), var(--brand));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    h3{
+      margin: 20px 0 10px; 
+      font-size: 18px;
+      color: var(--brand-2);
+      font-weight: 600;
+    }
+    
+    .hint{color: var(--muted); font-size: 13px; line-height: 1.5}
+
+    .kbar{display:flex; gap:10px; flex-wrap: wrap}
+    
+    .k{
+      font-family: var(--mono); 
+      font-size: 11px; 
+      padding: 6px 10px; 
+      border-radius: 10px; 
+      background: rgba(0,255,204,.08);
+      border:1px solid rgba(0,255,204,.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      transition: all .3s ease;
+    }
+    
+    .k:hover{
+      background: rgba(0,255,204,.15);
+      box-shadow: 0 0 12px rgba(0,255,204,.3);
+      transform: translateY(-2px);
+    }
+
+    pre{
+      position: relative; 
+      background: linear-gradient(135deg, #050811, #0a0e1a);
+      color:#e0efff; 
+      border-radius: 16px; 
+      padding: 18px 18px 18px 16px; 
+      overflow:auto; 
+      border:1px solid rgba(0,255,204,.15);
+      box-shadow: 0 4px 20px rgba(0,0,0,.4), 0 0 0 1px rgba(0,255,204,.05) inset;
+      margin: 14px 0;
+    }
+    
+    pre::-webkit-scrollbar{height: 8px}
+    pre::-webkit-scrollbar-track{background: rgba(0,0,0,.3); border-radius: 10px}
+    pre::-webkit-scrollbar-thumb{background: rgba(0,255,204,.2); border-radius: 10px}
+    pre::-webkit-scrollbar-thumb:hover{background: var(--brand)}
+    
+    code{font-family: var(--mono); font-size: 13px; line-height: 1.6}
+    
+    .copy{
+      position:absolute; 
+      top:10px; 
+      right:10px; 
+      font-size:11px; 
+      padding:8px 14px; 
+      border-radius:12px; 
+      border:1px solid rgba(0,255,204,.3); 
+      background: rgba(0,255,204,.1);
+      color: var(--brand); 
+      cursor:pointer;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      transition: all .3s ease;
+      font-family: var(--mono);
+    }
+    
+    .copy:hover{
+      background: rgba(0,255,204,.2);
+      box-shadow: 0 0 12px rgba(0,255,204,.4);
+      transform: scale(1.05);
+    }
+    
+    .copy.copied{
+      background: var(--ok);
+      border-color: var(--ok);
+      color: var(--bg);
+      box-shadow: 0 0 20px rgba(0,255,163,.5);
+    }
+
+    details{
+      border:1px solid var(--panel-strong); 
+      background: rgba(0,0,0,.2);
+      border-radius: 14px; 
+      padding: 14px 16px; 
+      margin: 12px 0;
+      transition: all .3s ease;
+    }
+    
+    details[open]{
+      background: rgba(0,0,0,.35);
+      border-color: rgba(0,255,204,.2);
+      box-shadow: 0 0 10px rgba(0,255,204,.1);
+    }
+    
+    summary{
+      cursor: pointer; 
+      list-style:none;
+      font-weight: 600;
+      transition: color .3s ease;
+    }
+    
+    summary:hover{color: var(--brand)}
+    
+    summary::before{
+      content: '▸ ';
+      color: var(--brand);
+      transition: transform .3s ease;
+      display: inline-block;
+    }
+    
+    details[open] summary::before{
+      transform: rotate(90deg);
+    }
+
+    .pill{
+      display:inline-flex; 
+      align-items:center; 
+      gap:8px; 
+      padding:8px 14px; 
+      border-radius:999px; 
+      background: rgba(0,0,0,.3);
+      border:1px solid var(--panel-strong); 
+      font-size:12px;
+      font-weight: 500;
+      transition: all .3s ease;
+    }
+    
+    .pill:hover{
+      background: rgba(0,255,204,.05);
+      border-color: rgba(0,255,204,.3);
+    }
+    
+    .status-ok{color: var(--ok); text-shadow: 0 0 8px var(--ok)}
+    .status-warn{color: var(--warn); text-shadow: 0 0 8px var(--warn)}
+    .status-err{color: var(--err); text-shadow: 0 0 8px var(--err)}
+
+    footer{
+      padding: 50px 24px; 
+      text-align:center; 
+      color: var(--muted);
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,.3));
+      border-top: 1px solid var(--panel-strong);
+    }
+    
+    footer a{
+      display: inline-block;
+      margin-top: 12px;
+      padding: 10px 20px;
+      background: rgba(0,255,204,.1);
+      border: 1px solid rgba(0,255,204,.3);
+      border-radius: 999px;
+      transition: all .3s ease;
+    }
+    
+    footer a:hover{
+      background: rgba(0,255,204,.2);
+      box-shadow: 0 0 20px rgba(0,255,204,.3);
+      transform: translateY(-2px);
+    }
+    
+    kbd{
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 3px 8px;
+      background: rgba(0,255,204,.1);
+      border: 1px solid rgba(0,255,204,.3);
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,.2);
+    }
+    
+    ol, ul{padding-left: 24px}
+    li{margin: 8px 0}
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px){
+      .wrap{padding: 12px 16px}
+      h1{font-size: 24px}
+      .kbar{display: none}
+      .hero{gap: 16px}
+      .card{padding: 18px}
+      .grid{gap: 16px}
+      pre{font-size: 12px; padding: 14px}
+      .copy{font-size: 10px; padding: 6px 10px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated emoji background -->
+  <div class="emoji-bg" id="emojiContainer"></div>
+  
+  <header>
+    <div class="wrap" style="display:flex; justify-content: space-between; align-items:center; gap:16px">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Docker Fastlane</h1>
+      </div>
+      <div class="kbar" aria-label="atajos">
+        <div class="k">/ buscar</div>
+        <div class="k">? ayuda</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <nav>
+      <h3>⚡ Contenido</h3>
+      <input id="search" placeholder="Filtrar secciones..." />
+      <ul id="toc">
+        <li><a href="#intro" class="active">Introducción</a></li>
+        <li><a href="#instalacion">Instalación</a></li>
+        <li><a href="#imagenes">Imágenes</a></li>
+        <li><a href="#contenedores">Contenedores</a></li>
+        <li><a href="#volumenes">Volúmenes</a></li>
+        <li><a href="#redes">Redes</a></li>
+        <li><a href="#compose">Docker Compose</a></li>
+        <li><a href="#cheatsheet">Cheatsheet</a></li>
+        <li><a href="#registry">Registries</a></li>
+        <li><a href="#debug">Debug & logs</a></li>
+        <li><a href="#extras">Extras</a></li>
+        <li><a href="#quiz">Desafío</a></li>
+      </ul>
+    </nav>
+
+    <section>
+      <div class="hero">
+        <div class="card">
+          <span class="badge">⚡ Aprende rápido · práctico · moderno</span>
+          <h2 id="intro">Aplica Docker en 90 minutos</h2>
+          <p>Un micro‑curso accionable: conceptos clave, comandos esenciales y un proyecto <em>compose</em> listo para correr. Todo en una sola página, con diseño moderno y pensado para móvil.</p>
+          <p class="hint">💡 Tip: pulsa la tecla <kbd>/</kbd> para filtrar secciones al vuelo.</p>
+        </div>
+        <div class="card">
+          <h3>¿Qué te llevarás?</h3>
+          <ul>
+            <li>Entiende imágenes, contenedores, redes y volúmenes.</li>
+            <li>Dominio de <code>docker</code> y <code>docker compose</code> con ejemplos.</li>
+            <li>Un stack listo: Nginx + API + Postgres + Adminer.</li>
+          </ul>
+          <div class="kbar">
+            <span class="pill"><span class="status-ok">●</span> Nivel: principiante/intermedio</span>
+            <span class="pill">🚀 100% copiable</span>
+            <span class="pill">🎨 Cyber design</span>
+          </div>
+        </div>
+      </div>
+
+      <article class="grid">
+        <div class="card">
+          <h2>🐳 ¿Qué es Docker?</h2>
+          <p>Docker es una plataforma que permite <strong>empaquetar aplicaciones y todas sus dependencias</strong> en contenedores ligeros y portables. Un contenedor es como una "caja" autónoma que contiene todo lo necesario para que tu aplicación funcione: código, runtime, librerías y configuraciones.</p>
+          
+          <h3>¿Para qué sirve?</h3>
+          <p>Docker resuelve el clásico problema de <em>"en mi máquina funciona"</em>. Con Docker, tu aplicación funcionará exactamente igual en desarrollo, testing y producción, sin importar el sistema operativo o configuración del servidor.</p>
+        </div>
+
+        <div class="card">
+          <h2>⚡ ¿Por qué Docker es importante?</h2>
+          <div style="display: grid; gap: 16px; margin-top: 12px;">
+            <details open>
+              <summary><strong>🚀 Portabilidad total</strong></summary>
+              <p>Crea una vez, ejecuta en cualquier lugar: tu laptop, servidores on-premise, AWS, Google Cloud, Azure. Los contenedores son independientes del sistema operativo.</p>
+            </details>
+            
+            <details open>
+              <summary><strong>⚙️ Consistencia entre entornos</strong></summary>
+              <p>Tu aplicación tendrá el mismo comportamiento en desarrollo, staging y producción. Adiós a los bugs que "solo pasan en producción".</p>
+            </details>
+            
+            <details open>
+              <summary><strong>🔧 Configuración simple</strong></summary>
+              <p>Olvídate de instalar Node.js, Python, bases de datos y dependencias manualmente. Con Docker, un solo comando levanta todo tu stack completo.</p>
+            </details>
+            
+            <details open>
+              <summary><strong>💨 Despliegues rápidos</strong></summary>
+              <p>Los contenedores se inician en segundos, no en minutos. Esto acelera dramáticamente tus ciclos de desarrollo y deployment.</p>
+            </details>
+            
+            <details open>
+              <summary><strong>🔒 Aislamiento y seguridad</strong></summary>
+              <p>Cada contenedor está aislado. Si uno falla o es comprometido, no afecta al resto del sistema. Perfecto para microservicios.</p>
+            </details>
+            
+            <details open>
+              <summary><strong>📦 Eficiencia de recursos</strong></summary>
+              <p>A diferencia de máquinas virtuales, los contenedores comparten el kernel del sistema, consumiendo muchísimo menos RAM y CPU.</p>
+            </details>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>💡 Ejemplos de utilidad práctica</h2>
+          
+          <h3>1. Desarrollo en equipo</h3>
+          <pre><button class="copy">copiar</button><code># Nuevo developer en el equipo
+git clone tu-proyecto
+docker compose up
+# ¡Listo! Sin instalar Node, PostgreSQL, Redis, etc.</code></pre>
+          <p class="hint">Todo el equipo trabaja con versiones exactas de cada dependencia. Cero configuración manual.</p>
+          
+          <h3>2. Testing de múltiples versiones</h3>
+          <pre><button class="copy">copiar</button><code># Probar tu app en diferentes versiones de Node
+docker run --rm -v "$PWD":/app -w /app node:18 npm test
+docker run --rm -v "$PWD":/app -w /app node:20 npm test
+docker run --rm -v "$PWD":/app -w /app node:22 npm test</code></pre>
+          <p class="hint">Cambia entre versiones sin desinstalar/reinstalar. Ideal para verificar compatibilidad.</p>
+          
+          <h3>3. Bases de datos temporales</h3>
+          <pre><button class="copy">copiar</button><code># Levantar PostgreSQL temporal para pruebas
+docker run --rm -e POSTGRES_PASSWORD=test -p 5432:5432 postgres:16
+# Al detenerlo, desaparece todo sin dejar rastro</code></pre>
+          <p class="hint">Perfecto para experimentar sin ensuciar tu sistema con instalaciones permanentes.</p>
+          
+          <h3>4. Microservicios complejos</h3>
+          <pre><button class="copy">copiar</button><code># Levantar un stack completo con un comando
+docker compose up
+# Frontend + API + Base de datos + Cache + Cola de trabajos</code></pre>
+          <p class="hint">Orquesta servicios complejos como si fueran uno solo. Todo sincronizado y conectado.</p>
+          
+          <h3>5. CI/CD y producción</h3>
+          <pre><button class="copy">copiar</button><code># Build en CI
+docker build -t miapp:v1.2.3 .
+docker push miapp:v1.2.3
+
+# Deploy en producción (cualquier servidor)
+docker pull miapp:v1.2.3
+docker run -d -p 80:3000 miapp:v1.2.3</code></pre>
+          <p class="hint">Pipeline de deployment simplificado. La misma imagen pasa por todos los ambientes.</p>
+        </div>
+
+        <div class="card" id="instalacion">
+          <h2>🔧 Instalación</h2>
+          <details open>
+            <summary><strong>macOS</strong> · Docker Desktop</summary>
+            <pre><button class="copy">copiar</button><code>brew install --cask docker
+open -a Docker
+# En settings: activar "Use Docker Compose V2"</code></pre>
+          </details>
+          <details>
+            <summary><strong>Linux</strong> · Engine + Compose</summary>
+            <pre><button class="copy">copiar</button><code># Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo $VERSION_CODENAME) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo usermod -aG docker $USER && newgrp docker</code></pre>
+          </details>
+          <details>
+            <summary><strong>Windows</strong> · WSL2 + Desktop</summary>
+            <pre><button class="copy">copiar</button><code>wsl --install -d Ubuntu
+winget install -e --id Docker.DockerDesktop</code></pre>
+          </details>
+        </div>
+
+        <div class="card" id="imagenes">
+          <h2>📦 Imágenes</h2>
+          <p class="hint">Construye artefactos inmutables a partir de un <code>Dockerfile</code>.</p>
+          <pre><button class="copy">copiar</button><code># construir una imagen
+docker build -t miapp:1.0 .
+# listar
+docker images
+# borrar
+docker rmi miapp:1.0</code></pre>
+          <h3>Dockerfile base (Node)</h3>
+          <pre><button class="copy">copiar</button><code>FROM node:22-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+RUN adduser -D runner
+USER runner
+CMD ["node","dist/index.js"]
+EXPOSE 3000</code></pre>
+        </div>
+
+        <div class="card" id="contenedores">
+          <h2>🐳 Contenedores</h2>
+          <pre><button class="copy">copiar</button><code># ejecutar un contenedor efímero
+docker run --rm -it alpine:3.20 sh
+# nombrado y en segundo plano
+docker run -d --name web -p 8080:80 nginx:alpine
+# parar / iniciar / logs
+docker stop web && docker start web && docker logs -f web</code></pre>
+          <details>
+            <summary>Entrar a un contenedor en ejecución</summary>
+            <pre><button class="copy">copiar</button><code>docker exec -it web sh</code></pre>
+          </details>
+        </div>
+
+        <div class="card" id="volumenes">
+          <h2>💾 Volúmenes</h2>
+          <pre><button class="copy">copiar</button><code># volumen nombrado
+docker volume create datos
+# montar
+docker run -d --name db -v datos:/var/lib/postgresql/data postgres:16
+# bind mount (carpeta local)
+docker run --rm -it -v "$PWD":/work -w /work node:22-alpine sh</code></pre>
+        </div>
+
+        <div class="card" id="redes">
+          <h2>🌐 Redes</h2>
+          <pre><button class="copy">copiar</button><code>docker network create appnet
+# conectar servicios a la misma red
+docker run -d --name redis --network appnet redis:7
+# contenedores se resuelven por nombre (DNS interno)
+# ej: app se conecta a host "redis"</code></pre>
+        </div>
+
+        <div class="card" id="compose">
+          <h2>⚙️ Docker Compose (stack completo)</h2>
+          <p class="hint">Guarda esto como <code>docker-compose.yml</code> y ejecuta <code>docker compose up -d</code>.</p>
+          <pre><button class="copy">copiar</button><code>services:
+  web:
+    image: nginx:alpine
+    ports: ["8080:80"]
+    volumes: ["./nginx.conf:/etc/nginx/conf.d/default.conf:ro"]
+    depends_on: [api]
+  api:
+    build: ./api
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/app
+    ports: ["3000:3000"]
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+  adminer:
+    image: adminer
+    ports: ["8081:8080"]
+volumes:
+  pgdata:
+</code></pre>
+          <h3>nginx.conf (reverse proxy simple)</h3>
+          <pre><button class="copy">copiar</button><code>server {
+  listen 80;
+  location / { proxy_pass http://api:3000; }
+}</code></pre>
+        </div>
+
+        <div class="card" id="cheatsheet">
+          <h2>📋 Cheatsheet - Comandos Esenciales</h2>
+          <p class="hint">Todos los comandos que necesitas en un solo lugar. Haz click en copiar y úsalos directamente.</p>
+          
+          <h3>🐳 Contenedores</h3>
+          <pre><button class="copy">copiar</button><code># Listar contenedores activos
+docker ps
+
+# Listar todos (incluyendo detenidos)
+docker ps -a
+
+# Ejecutar contenedor interactivo
+docker run -it ubuntu bash
+
+# Ejecutar en segundo plano
+docker run -d nginx
+
+# Con nombre y puerto
+docker run -d --name miapp -p 8080:80 nginx
+
+# Detener contenedor
+docker stop miapp
+
+# Iniciar contenedor
+docker start miapp
+
+# Reiniciar contenedor
+docker restart miapp
+
+# Eliminar contenedor
+docker rm miapp
+
+# Eliminar contenedor en ejecución (forzar)
+docker rm -f miapp
+
+# Ver logs
+docker logs miapp
+
+# Seguir logs en tiempo real
+docker logs -f miapp
+
+# Ejecutar comando en contenedor activo
+docker exec -it miapp bash
+
+# Copiar archivos desde/hacia contenedor
+docker cp miapp:/ruta/archivo.txt ./local.txt
+docker cp ./local.txt miapp:/ruta/</code></pre>
+
+          <h3>📦 Imágenes</h3>
+          <pre><button class="copy">copiar</button><code># Listar imágenes
+docker images
+
+# Buscar imagen en Docker Hub
+docker search nginx
+
+# Descargar imagen
+docker pull nginx:alpine
+
+# Construir imagen desde Dockerfile
+docker build -t miapp:1.0 .
+
+# Construir sin cache
+docker build --no-cache -t miapp:1.0 .
+
+# Etiquetar imagen
+docker tag miapp:1.0 usuario/miapp:1.0
+
+# Ver historial de capas
+docker history miapp:1.0
+
+# Eliminar imagen
+docker rmi miapp:1.0
+
+# Eliminar imágenes sin usar
+docker image prune
+
+# Guardar imagen en archivo
+docker save -o miapp.tar miapp:1.0
+
+# Cargar imagen desde archivo
+docker load -i miapp.tar</code></pre>
+
+          <h3>💾 Volúmenes</h3>
+          <pre><button class="copy">copiar</button><code># Crear volumen
+docker volume create datos
+
+# Listar volúmenes
+docker volume ls
+
+# Inspeccionar volumen
+docker volume inspect datos
+
+# Usar volumen en contenedor
+docker run -v datos:/app/data miapp
+
+# Bind mount (carpeta local)
+docker run -v /ruta/local:/app/data miapp
+docker run -v "$PWD":/app miapp
+
+# Eliminar volumen
+docker volume rm datos
+
+# Eliminar volúmenes sin usar
+docker volume prune</code></pre>
+
+          <h3>🌐 Redes</h3>
+          <pre><button class="copy">copiar</button><code># Listar redes
+docker network ls
+
+# Crear red
+docker network create mired
+
+# Conectar contenedor a red
+docker run -d --name app --network mired nginx
+
+# Conectar contenedor existente a red
+docker network connect mired app
+
+# Desconectar de red
+docker network disconnect mired app
+
+# Inspeccionar red
+docker network inspect mired
+
+# Eliminar red
+docker network rm mired
+
+# Eliminar redes sin usar
+docker network prune</code></pre>
+
+          <h3>⚙️ Docker Compose</h3>
+          <pre><button class="copy">copiar</button><code># Iniciar servicios
+docker compose up
+
+# Iniciar en segundo plano
+docker compose up -d
+
+# Detener servicios
+docker compose down
+
+# Detener y eliminar volúmenes
+docker compose down -v
+
+# Ver logs
+docker compose logs
+
+# Seguir logs
+docker compose logs -f
+
+# Logs de servicio específico
+docker compose logs -f api
+
+# Reconstruir imágenes
+docker compose build
+
+# Reconstruir y reiniciar
+docker compose up -d --build
+
+# Listar servicios
+docker compose ps
+
+# Ejecutar comando en servicio
+docker compose exec api sh
+
+# Escalar servicio
+docker compose up -d --scale api=3</code></pre>
+
+          <h3>🔍 Información y Debug</h3>
+          <pre><button class="copy">copiar</button><code># Información del sistema
+docker info
+
+# Versión de Docker
+docker version
+
+# Uso de recursos en tiempo real
+docker stats
+
+# Uso de recursos de contenedor específico
+docker stats miapp
+
+# Inspeccionar contenedor (JSON)
+docker inspect miapp
+
+# Procesos de un contenedor
+docker top miapp
+
+# Eventos en tiempo real
+docker events
+
+# Uso de disco
+docker system df</code></pre>
+
+          <h3>🧹 Limpieza</h3>
+          <pre><button class="copy">copiar</button><code># Eliminar contenedores detenidos
+docker container prune
+
+# Eliminar imágenes sin usar
+docker image prune
+
+# Eliminar imágenes sin usar (todas)
+docker image prune -a
+
+# Eliminar volúmenes sin usar
+docker volume prune
+
+# Eliminar redes sin usar
+docker network prune
+
+# Limpieza completa del sistema
+docker system prune
+
+# Limpieza completa (incluye imágenes)
+docker system prune -a
+
+# Limpieza completa + volúmenes
+docker system prune -a --volumes</code></pre>
+
+          <h3>🏷️ Registry</h3>
+          <pre><button class="copy">copiar</button><code># Login a Docker Hub
+docker login
+
+# Login a registry privado
+docker login registry.ejemplo.com
+
+# Logout
+docker logout
+
+# Push imagen
+docker push usuario/miapp:1.0
+
+# Pull imagen privada
+docker pull usuario/miapp-privada:1.0
+
+# Tag para registry privado
+docker tag miapp:1.0 registry.ejemplo.com/miapp:1.0</code></pre>
+        </div>
+
+        <div class="card" id="registry">
+          <h2>🏷️ Registries</h2>
+          <pre><button class="copy">copiar</button><code># taggear y subir a Docker Hub
+docker login
+docker tag miapp:1.0 usuario/miapp:1.0
+docker push usuario/miapp:1.0
+# ejecutar desde cualquier máquina
+docker run -p 3000:3000 usuario/miapp:1.0</code></pre>
+        </div>
+
+        <div class="card" id="debug">
+          <h2>🔍 Debug & logs</h2>
+          <pre><button class="copy">copiar</button><code>docker ps -a            # contenedores
+docker images          # imágenes
+docker stats           # recursos en vivo
+docker logs -f api     # logs streaming
+docker inspect api     # JSON detallado
+# limpiar recursos colgados (¡cuidado!)
+docker system prune -a</code></pre>
+        </div>
+
+        <div class="card" id="extras">
+          <h2>✨ Extras útiles</h2>
+          <details>
+            <summary>Hot reload para Node (volumen + deps cache)</summary>
+            <pre><button class="copy">copiar</button><code>services:
+  api:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports: ["3000:3000"]</code></pre>
+          </details>
+          <details>
+            <summary>Build multi‑plataforma con Buildx</summary>
+            <pre><button class="copy">copiar</button><code>docker buildx create --use
+# ejemplo: linux/amd64 + linux/arm64
+docker buildx build --platform linux/amd64,linux/arm64 -t usuario/miapp:1.0 --push .</code></pre>
+          </details>
+        </div>
+
+        <div class="card" id="quiz">
+          <h2>🎯 Desafío rápido (10′)</h2>
+          <ol>
+            <li>Levanta el stack con <code>docker compose up -d</code>.</li>
+            <li>Abre <code>localhost:8080</code> (Nginx→API) y <code>localhost:8081</code> (Adminer).</li>
+            <li>Crea una tabla, inserta filas, y consulta desde la API.</li>
+            <li>Pushea la imagen a tu registry personal.</li>
+          </ol>
+          <p class="hint">Si todo pasa en verde → <span class="status-ok">●</span> ¡estás listo para contenerizar tu próximo proyecto!</p>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <div>Docker Fastlane · Aprende Docker de forma práctica y rápida</div>
+    <a href="#intro">↑ volver arriba</a>
+  </footer>
+
+  <script>
+    // Generate animated emojis background
+    const emojiContainer = document.getElementById('emojiContainer');
+    const emojis = ['📦', '📦', '🧊', '🧊', '🐳', '🐋', '🐳', '🐋'];
+    const emojiCount = 20;
+
+    function createEmoji() {
+      const emoji = document.createElement('div');
+      emoji.className = 'emoji';
+      emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      emoji.style.left = Math.random() * 100 + '%';
+      emoji.style.fontSize = (Math.random() * 1.5 + 1) + 'rem';
+      emoji.style.animationDuration = (Math.random() * 20 + 15) + 's';
+      emoji.style.animationDelay = Math.random() * 5 + 's';
+      
+      if (Math.random() > 0.5) {
+        emoji.style.animationName = 'floatEmojiReverse';
+      }
+      
+      emojiContainer.appendChild(emoji);
+      
+      // Remove after animation
+      setTimeout(() => {
+        emoji.remove();
+        createEmoji();
+      }, parseFloat(emoji.style.animationDuration) * 1000);
+    }
+
+    // Create initial emojis
+    for (let i = 0; i < emojiCount; i++) {
+      setTimeout(() => createEmoji(), i * 800);
+    }
+
+    // Copiar al portapapeles
+    document.querySelectorAll('pre .copy').forEach(btn=>{
+      btn.addEventListener('click', async e => {
+        const code = e.target.parentElement.querySelector('code').innerText;
+        try{ 
+          await navigator.clipboard.writeText(code); 
+          btn.classList.add('copied'); 
+          btn.textContent='✓ copiado'; 
+          setTimeout(()=>{
+            btn.classList.remove('copied'); 
+            btn.textContent='copiar'
+          },1500);
+        }catch(err){
+          alert('No se pudo copiar :(')
+        }
+      })
+    })
+
+    // ScrollSpy + filtro
+    const toc = document.querySelector('#toc');
+    const links = toc.querySelectorAll('a');
+    const sections = [...links].map(a=>document.querySelector(a.getAttribute('href')));
+
+    const obs = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        const id = '#'+entry.target.id;
+        const link = toc.querySelector(`a[href="${id}"]`);
+        if(entry.isIntersecting){ 
+          links.forEach(l=>l.classList.remove('active')); 
+          link?.classList.add('active'); 
+        }
+      })
+    }, {rootMargin: '-40% 0px -55% 0px', threshold: 0});
+    sections.forEach(sec=>sec && obs.observe(sec));
+
+    // Buscar con '/'
+    const search = document.getElementById('search');
+    document.addEventListener('keydown', (e)=>{
+      if(e.key==='/' && document.activeElement!==search){ 
+        e.preventDefault(); 
+        search.focus(); 
+      }
+      if(e.key==='?' ){ 
+        alert('⌨️ Atajos:\n\n/ → buscar\nEnter/Click → copia código\nScrollSpy → navegación automática'); 
+      }
+    });
+
+    search.addEventListener('input', ()=>{
+      const q = search.value.toLowerCase();
+      links.forEach(a=>{
+        const text=a.textContent.toLowerCase();
+        const sec=document.querySelector(a.getAttribute('href'));
+        const show= text.includes(q) || (sec && sec.innerText.toLowerCase().includes(q));
+        a.parentElement.style.display= show? '':'none';
+      })
+    });
+
+    // Animación de entrada para las cards
+    const cards = document.querySelectorAll('.card');
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.style.animation = 'fadeInUp .6s ease forwards';
+          }, index * 50);
+          cardObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    cards.forEach(card => {
+      card.style.opacity = '0';
+      cardObserver.observe(card);
+    });
+  </script>
+</body>
+</html>
