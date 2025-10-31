@@ -313,16 +313,27 @@
     .grid{display:grid; grid-template-columns: repeat(12, 1fr); gap: 20px}
     
     .card{
-      grid-column: span 12; 
-      padding:24px; 
-      border-radius: var(--radius); 
+      grid-column: span 12;
+      padding:24px;
+      border-radius: var(--radius);
       background: var(--panel);
       backdrop-filter: blur(10px);
-      border:1px solid var(--panel-strong); 
+      border:1px solid var(--panel-strong);
       box-shadow: var(--shadow), 0 0 0 1px rgba(0,255,204,.05) inset;
       transition: all .4s ease;
       position: relative;
       overflow: hidden;
+      opacity: 1;
+    }
+
+    .card.card-hidden{
+      opacity: 0;
+      transform: translateY(24px);
+    }
+
+    .card.card-visible{
+      animation: fadeInUp .6s ease forwards;
+      animation-delay: var(--card-delay, 0ms);
     }
     
     .card::before {
@@ -1346,20 +1357,38 @@ docker buildx build --platform linux/amd64,linux/arm64 -t usuario/miapp:1.0 --pu
 
     // Animación de entrada para las cards
     const cards = document.querySelectorAll('.card');
-    const cardObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry, index) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => {
-            entry.target.style.animation = 'fadeInUp .6s ease forwards';
-          }, index * 50);
-          cardObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1 });
 
-    cards.forEach(card => {
-      card.style.opacity = '0';
-      cardObserver.observe(card);
+    if ('IntersectionObserver' in window) {
+      const cardObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.remove('card-hidden');
+            entry.target.classList.add('card-visible');
+            cardObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      cards.forEach((card, index) => {
+        card.classList.add('card-hidden');
+        card.style.setProperty('--card-delay', `${index * 40}ms`);
+        cardObserver.observe(card);
+      });
+    } else {
+      cards.forEach(card => {
+        card.classList.add('card-visible');
+      });
+    }
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        cards.forEach(card => {
+          if (card.classList.contains('card-hidden')) {
+            card.classList.remove('card-hidden');
+            card.classList.add('card-visible');
+          }
+        });
+      }, 1000);
     });
   </script>
 </body>
