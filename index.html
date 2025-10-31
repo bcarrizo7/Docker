@@ -402,32 +402,58 @@
     pre::-webkit-scrollbar-thumb:hover{background: var(--brand)}
     
     code{font-family: var(--mono); font-size: 13px; line-height: 1.6}
-    
-    .copy{
-      position:absolute; 
-      top:10px; 
-      right:10px; 
-      font-size:11px; 
-      padding:8px 14px; 
-      border-radius:12px; 
-      border:1px solid rgba(0,255,204,.3); 
+
+    pre .code-lines{display:flex; flex-direction:column; gap:2px}
+
+    pre .code-line{
+      display:grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items:flex-start;
+      border-radius:10px;
+      transition: background .2s ease;
+      gap: 12px;
+      padding:2px 0;
+    }
+
+    pre .code-line:hover{background: rgba(255,255,255,.05);}
+
+    pre .code-line code{
+      display:block;
+      white-space: pre;
+      padding:6px 10px;
+      border-radius:8px;
+    }
+
+    pre .code-line.is-comment code{color: var(--muted);}
+
+    pre .code-line.is-empty code{padding:6px 10px; min-height: 1em;}
+
+    pre .code-line.is-empty .copy-line{display:none;}
+
+    .copy-line{
+      font-size:11px;
+      padding:8px 14px;
+      border-radius:12px;
+      border:1px solid rgba(0,255,204,.3);
       background: rgba(0,255,204,.1);
-      color: var(--brand); 
+      color: var(--brand);
       cursor:pointer;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: .05em;
       transition: all .3s ease;
       font-family: var(--mono);
+      align-self: flex-start;
+      white-space: nowrap;
     }
-    
-    .copy:hover{
+
+    .copy-line:hover{
       background: rgba(0,255,204,.2);
       box-shadow: 0 0 12px rgba(0,255,204,.4);
-      transform: scale(1.05);
+      transform: scale(1.03);
     }
-    
-    .copy.copied{
+
+    .copy-line.copied{
       background: var(--ok);
       border-color: var(--ok);
       color: var(--bg);
@@ -537,7 +563,7 @@
       .card{padding: 18px}
       .grid{gap: 16px}
       pre{font-size: 12px; padding: 14px}
-      .copy{font-size: 10px; padding: 6px 10px}
+      .copy-line{font-size: 10px; padding: 6px 10px}
     }
   </style>
 </head>
@@ -649,33 +675,33 @@
           <h2>💡 Ejemplos de utilidad práctica</h2>
           
           <h3>1. Desarrollo en equipo</h3>
-          <pre><button class="copy">copiar</button><code># Nuevo developer en el equipo
+          <pre><code># Nuevo developer en el equipo
 git clone tu-proyecto
 docker compose up
 # ¡Listo! Sin instalar Node, PostgreSQL, Redis, etc.</code></pre>
           <p class="hint">Todo el equipo trabaja con versiones exactas de cada dependencia. Cero configuración manual.</p>
           
           <h3>2. Testing de múltiples versiones</h3>
-          <pre><button class="copy">copiar</button><code># Probar tu app en diferentes versiones de Node
+          <pre><code># Probar tu app en diferentes versiones de Node
 docker run --rm -v "$PWD":/app -w /app node:18 npm test
 docker run --rm -v "$PWD":/app -w /app node:20 npm test
 docker run --rm -v "$PWD":/app -w /app node:22 npm test</code></pre>
           <p class="hint">Cambia entre versiones sin desinstalar/reinstalar. Ideal para verificar compatibilidad.</p>
           
           <h3>3. Bases de datos temporales</h3>
-          <pre><button class="copy">copiar</button><code># Levantar PostgreSQL temporal para pruebas
+          <pre><code># Levantar PostgreSQL temporal para pruebas
 docker run --rm -e POSTGRES_PASSWORD=test -p 5432:5432 postgres:16
 # Al detenerlo, desaparece todo sin dejar rastro</code></pre>
           <p class="hint">Perfecto para experimentar sin ensuciar tu sistema con instalaciones permanentes.</p>
           
           <h3>4. Microservicios complejos</h3>
-          <pre><button class="copy">copiar</button><code># Levantar un stack completo con un comando
+          <pre><code># Levantar un stack completo con un comando
 docker compose up
 # Frontend + API + Base de datos + Cache + Cola de trabajos</code></pre>
           <p class="hint">Orquesta servicios complejos como si fueran uno solo. Todo sincronizado y conectado.</p>
           
           <h3>5. CI/CD y producción</h3>
-          <pre><button class="copy">copiar</button><code># Build en CI
+          <pre><code># Build en CI
 docker build -t miapp:v1.2.3 .
 docker push miapp:v1.2.3
 
@@ -689,13 +715,13 @@ docker run -d -p 80:3000 miapp:v1.2.3</code></pre>
           <h2>🔧 Instalación</h2>
           <details open>
             <summary><strong>macOS</strong> · Docker Desktop</summary>
-            <pre><button class="copy">copiar</button><code>brew install --cask docker
+            <pre><code>brew install --cask docker
 open -a Docker
 # En settings: activar "Use Docker Compose V2"</code></pre>
           </details>
           <details>
             <summary><strong>Linux</strong> · Engine + Compose</summary>
-            <pre><button class="copy">copiar</button><code># Ubuntu/Debian
+            <pre><code># Ubuntu/Debian
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -711,7 +737,7 @@ sudo usermod -aG docker $USER && newgrp docker</code></pre>
           </details>
           <details>
             <summary><strong>Windows</strong> · WSL2 + Desktop</summary>
-            <pre><button class="copy">copiar</button><code>wsl --install -d Ubuntu
+            <pre><code>wsl --install -d Ubuntu
 winget install -e --id Docker.DockerDesktop</code></pre>
           </details>
         </div>
@@ -719,14 +745,14 @@ winget install -e --id Docker.DockerDesktop</code></pre>
         <div class="card" id="imagenes">
           <h2>📦 Imágenes</h2>
           <p class="hint">Construye artefactos inmutables a partir de un <code>Dockerfile</code>.</p>
-          <pre><button class="copy">copiar</button><code># construir una imagen
+          <pre><code># construir una imagen
 docker build -t miapp:1.0 .
 # listar
 docker images
 # borrar
 docker rmi miapp:1.0</code></pre>
           <h3>Dockerfile base (Node)</h3>
-          <pre><button class="copy">copiar</button><code>FROM node:22-alpine AS build
+          <pre><code>FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -744,7 +770,7 @@ EXPOSE 3000</code></pre>
 
         <div class="card" id="contenedores">
           <h2>🐳 Contenedores</h2>
-          <pre><button class="copy">copiar</button><code># ejecutar un contenedor efímero
+          <pre><code># ejecutar un contenedor efímero
 docker run --rm -it alpine:3.20 sh
 # nombrado y en segundo plano
 docker run -d --name web -p 8080:80 nginx:alpine
@@ -752,13 +778,13 @@ docker run -d --name web -p 8080:80 nginx:alpine
 docker stop web && docker start web && docker logs -f web</code></pre>
           <details>
             <summary>Entrar a un contenedor en ejecución</summary>
-            <pre><button class="copy">copiar</button><code>docker exec -it web sh</code></pre>
+            <pre><code>docker exec -it web sh</code></pre>
           </details>
         </div>
 
         <div class="card" id="volumenes">
           <h2>💾 Volúmenes</h2>
-          <pre><button class="copy">copiar</button><code># volumen nombrado
+          <pre><code># volumen nombrado
 docker volume create datos
 # montar
 docker run -d --name db -v datos:/var/lib/postgresql/data postgres:16
@@ -768,7 +794,7 @@ docker run --rm -it -v "$PWD":/work -w /work node:22-alpine sh</code></pre>
 
         <div class="card" id="redes">
           <h2>🌐 Redes</h2>
-          <pre><button class="copy">copiar</button><code>docker network create appnet
+          <pre><code>docker network create appnet
 # conectar servicios a la misma red
 docker run -d --name redis --network appnet redis:7
 # contenedores se resuelven por nombre (DNS interno)
@@ -778,7 +804,7 @@ docker run -d --name redis --network appnet redis:7
         <div class="card" id="compose">
           <h2>⚙️ Docker Compose (stack completo)</h2>
           <p class="hint">Guarda esto como <code>docker-compose.yml</code> y ejecuta <code>docker compose up -d</code>.</p>
-          <pre><button class="copy">copiar</button><code>services:
+          <pre><code>services:
   web:
     image: nginx:alpine
     ports: ["8080:80"]
@@ -801,7 +827,7 @@ volumes:
   pgdata:
 </code></pre>
           <h3>nginx.conf (reverse proxy simple)</h3>
-          <pre><button class="copy">copiar</button><code>server {
+          <pre><code>server {
   listen 80;
   location / { proxy_pass http://api:3000; }
 }</code></pre>
@@ -812,7 +838,7 @@ volumes:
           <p class="hint">Todos los comandos que necesitas en un solo lugar. Haz click en copiar y úsalos directamente.</p>
           
           <h3>🐳 Contenedores</h3>
-          <pre><button class="copy">copiar</button><code># Listar contenedores activos
+          <pre><code># Listar contenedores activos
 docker ps
 
 # Listar todos (incluyendo detenidos)
@@ -856,7 +882,7 @@ docker cp miapp:/ruta/archivo.txt ./local.txt
 docker cp ./local.txt miapp:/ruta/</code></pre>
 
           <h3>📦 Imágenes</h3>
-          <pre><button class="copy">copiar</button><code># Listar imágenes
+          <pre><code># Listar imágenes
 docker images
 
 # Buscar imagen en Docker Hub
@@ -890,7 +916,7 @@ docker save -o miapp.tar miapp:1.0
 docker load -i miapp.tar</code></pre>
 
           <h3>💾 Volúmenes</h3>
-          <pre><button class="copy">copiar</button><code># Crear volumen
+          <pre><code># Crear volumen
 docker volume create datos
 
 # Listar volúmenes
@@ -913,7 +939,7 @@ docker volume rm datos
 docker volume prune</code></pre>
 
           <h3>🌐 Redes</h3>
-          <pre><button class="copy">copiar</button><code># Listar redes
+          <pre><code># Listar redes
 docker network ls
 
 # Crear red
@@ -938,7 +964,7 @@ docker network rm mired
 docker network prune</code></pre>
 
           <h3>⚙️ Docker Compose</h3>
-          <pre><button class="copy">copiar</button><code># Iniciar servicios
+          <pre><code># Iniciar servicios
 docker compose up
 
 # Iniciar en segundo plano
@@ -975,7 +1001,7 @@ docker compose exec api sh
 docker compose up -d --scale api=3</code></pre>
 
           <h3>🔍 Información y Debug</h3>
-          <pre><button class="copy">copiar</button><code># Información del sistema
+          <pre><code># Información del sistema
 docker info
 
 # Versión de Docker
@@ -1000,7 +1026,7 @@ docker events
 docker system df</code></pre>
 
           <h3>🧹 Limpieza</h3>
-          <pre><button class="copy">copiar</button><code># Eliminar contenedores detenidos
+          <pre><code># Eliminar contenedores detenidos
 docker container prune
 
 # Eliminar imágenes sin usar
@@ -1025,7 +1051,7 @@ docker system prune -a
 docker system prune -a --volumes</code></pre>
 
           <h3>🏷️ Registry</h3>
-          <pre><button class="copy">copiar</button><code># Login a Docker Hub
+          <pre><code># Login a Docker Hub
 docker login
 
 # Login a registry privado
@@ -1046,7 +1072,7 @@ docker tag miapp:1.0 registry.ejemplo.com/miapp:1.0</code></pre>
 
         <div class="card" id="registry">
           <h2>🏷️ Registries</h2>
-          <pre><button class="copy">copiar</button><code># taggear y subir a Docker Hub
+          <pre><code># taggear y subir a Docker Hub
 docker login
 docker tag miapp:1.0 usuario/miapp:1.0
 docker push usuario/miapp:1.0
@@ -1056,7 +1082,7 @@ docker run -p 3000:3000 usuario/miapp:1.0</code></pre>
 
         <div class="card" id="debug">
           <h2>🔍 Debug & logs</h2>
-          <pre><button class="copy">copiar</button><code>docker ps -a            # contenedores
+          <pre><code>docker ps -a            # contenedores
 docker images          # imágenes
 docker stats           # recursos en vivo
 docker logs -f api     # logs streaming
@@ -1069,7 +1095,7 @@ docker system prune -a</code></pre>
           <h2>✨ Extras útiles</h2>
           <details>
             <summary>Hot reload para Node (volumen + deps cache)</summary>
-            <pre><button class="copy">copiar</button><code>services:
+            <pre><code>services:
   api:
     image: node:22-alpine
     working_dir: /app
@@ -1081,7 +1107,7 @@ docker system prune -a</code></pre>
           </details>
           <details>
             <summary>Build multi‑plataforma con Buildx</summary>
-            <pre><button class="copy">copiar</button><code>docker buildx create --use
+            <pre><code>docker buildx create --use
 # ejemplo: linux/amd64 + linux/arm64
 docker buildx build --platform linux/amd64,linux/arm64 -t usuario/miapp:1.0 --push .</code></pre>
           </details>
@@ -1140,73 +1166,144 @@ docker buildx build --platform linux/amd64,linux/arm64 -t usuario/miapp:1.0 --pu
     }
 
     // Copiar al portapapeles
-    const extractCommands = (text) => {
-      return text
-        .split('\n')
-        .map(line => {
-          if (!line.trim() || line.trim().startsWith('#')) {
-            return null;
-          }
+    const stripInlineComment = (line) => {
+      let cleaned = '';
+      let inSingle = false;
+      let inDouble = false;
+      let inBacktick = false;
 
-          let cleaned = '';
-          let inSingle = false;
-          let inDouble = false;
-          let inBacktick = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const prev = i > 0 ? line[i - 1] : '';
 
-          for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            const prevChar = i > 0 ? line[i - 1] : '';
+        if (char === "'" && prev !== '\\' && !inDouble && !inBacktick) {
+          inSingle = !inSingle;
+          cleaned += char;
+          continue;
+        }
 
-            if (char === "'" && prevChar !== '\\' && !inDouble && !inBacktick) {
-              inSingle = !inSingle;
-              cleaned += char;
-              continue;
-            }
+        if (char === '"' && prev !== '\\' && !inSingle && !inBacktick) {
+          inDouble = !inDouble;
+          cleaned += char;
+          continue;
+        }
 
-            if (char === '"' && prevChar !== '\\' && !inSingle && !inBacktick) {
-              inDouble = !inDouble;
-              cleaned += char;
-              continue;
-            }
+        if (char === '`' && prev !== '\\' && !inSingle && !inDouble) {
+          inBacktick = !inBacktick;
+          cleaned += char;
+          continue;
+        }
 
-            if (char === '`' && prevChar !== '\\' && !inSingle && !inDouble) {
-              inBacktick = !inBacktick;
-              cleaned += char;
-              continue;
-            }
+        if (char === '#' && !inSingle && !inDouble && !inBacktick) {
+          break;
+        }
 
-            if (char === '#' && !inSingle && !inDouble && !inBacktick) {
-              break;
-            }
+        cleaned += char;
+      }
 
-            cleaned += char;
-          }
-
-          const result = cleaned.replace(/\s+$/,'');
-          return result ? result : null;
-        })
-        .filter(Boolean)
-        .join('\n');
+      return cleaned.replace(/\s+$/,'');
     };
 
-    document.querySelectorAll('pre .copy').forEach(btn=>{
-      btn.addEventListener('click', async e => {
-        const code = e.target.parentElement.querySelector('code').innerText;
-        const commands = extractCommands(code);
-        const textToCopy = commands || code;
-        try{
-          await navigator.clipboard.writeText(textToCopy);
-          btn.classList.add('copied');
-          btn.textContent='✓ copiado';
-          setTimeout(()=>{
-            btn.classList.remove('copied');
-            btn.textContent='copiar'
-          },1500);
-        }catch(err){
-          alert('No se pudo copiar :(')
-        }
-      })
-    })
+    const setupCopyableCommands = () => {
+      document.querySelectorAll('pre code').forEach(codeEl => {
+        const pre = codeEl.closest('pre');
+        if (!pre) return;
+
+        const raw = codeEl.textContent.replace(/\r\n?/g, '\n');
+        const lines = raw.split('\n');
+        const groups = [];
+        let currentCommand = [];
+
+        const flushCommand = () => {
+          if (!currentCommand.length) return;
+          const sanitized = currentCommand.map(stripInlineComment);
+          let copyText = sanitized.join('\n');
+          copyText = copyText.replace(/^\n+|\n+$/g, '');
+          if (!copyText.trim()) {
+            currentCommand = [];
+            return;
+          }
+          groups.push({
+            type: 'command',
+            displayLines: [...currentCommand],
+            copyText
+          });
+          currentCommand = [];
+        };
+
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed === '') {
+            flushCommand();
+            groups.push({ type: 'empty', displayLines: [''] });
+            return;
+          }
+
+          if (trimmed.startsWith('#')) {
+            flushCommand();
+            groups.push({ type: 'comment', displayLines: [line] });
+            return;
+          }
+
+          currentCommand.push(line);
+          const continues = /[\\|]\s*$/.test(trimmed);
+          if (!continues) {
+            flushCommand();
+          }
+        });
+
+        flushCommand();
+
+        pre.innerHTML = '';
+        const list = document.createElement('div');
+        list.className = 'code-lines';
+
+        groups.forEach(group => {
+          const row = document.createElement('div');
+          row.classList.add('code-line');
+          const codeLine = document.createElement('code');
+
+          if (group.type === 'empty') {
+            row.classList.add('is-empty');
+            codeLine.textContent = '\u00A0';
+          } else {
+            codeLine.textContent = group.displayLines.join('\n');
+            if (group.type === 'comment') {
+              row.classList.add('is-comment');
+            }
+          }
+
+          row.appendChild(codeLine);
+
+          if (group.type === 'command' && group.copyText) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'copy-line';
+            btn.textContent = 'copiar';
+            btn.addEventListener('click', async () => {
+              try {
+                await navigator.clipboard.writeText(group.copyText);
+                btn.classList.add('copied');
+                btn.textContent = '✓ copiado';
+                setTimeout(() => {
+                  btn.classList.remove('copied');
+                  btn.textContent = 'copiar';
+                }, 1500);
+              } catch (err) {
+                alert('No se pudo copiar :(');
+              }
+            });
+            row.appendChild(btn);
+          }
+
+          list.appendChild(row);
+        });
+
+        pre.appendChild(list);
+      });
+    };
+
+    setupCopyableCommands();
 
     // ScrollSpy + filtro
     const toc = document.querySelector('#toc');
