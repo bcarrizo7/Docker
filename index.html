@@ -414,34 +414,49 @@
     
     code{font-family: var(--mono); font-size: 13px; line-height: 1.6}
 
-    pre .code-lines{display:flex; flex-direction:column; gap:2px}
+    .cmd-pre{
+      padding: 0;
+      overflow: hidden;
+    }
 
-    pre .code-line{
-      display:grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+    .cmd-pre .command-lines{
+      display:flex;
+      flex-direction:column;
+    }
+
+    .cmd-pre .command-row{
+      display:flex;
+      gap:12px;
       align-items:flex-start;
-      border-radius:10px;
+      justify-content:space-between;
+      padding:10px 14px;
+      border-bottom:1px solid rgba(255,255,255,.05);
       transition: background .2s ease;
-      gap: 12px;
-      padding:2px 0;
     }
 
-    pre .code-line:hover{background: rgba(255,255,255,.05);}
+    .cmd-pre .command-row:last-child{border-bottom:none;}
 
-    pre .code-line code{
-      display:block;
-      white-space: pre;
-      padding:6px 10px;
-      border-radius:8px;
+    .cmd-pre .command-row:hover{background: rgba(255,255,255,.05);}
+
+    .cmd-pre .command-row.is-gap{
+      padding:6px 14px;
+      border-bottom:none;
     }
 
-    pre .code-line.is-comment code{color: var(--muted);}
+    .cmd-pre .command-row.is-gap .command-text{visibility:hidden;}
 
-    pre .code-line.is-empty code{padding:6px 10px; min-height: 1em;}
+    .cmd-pre .command-row.is-comment .command-text{color: var(--muted);}
 
-    pre .code-line.is-empty .copy-line{display:none;}
+    .cmd-pre .command-text{
+      font-family: var(--mono);
+      font-size:13px;
+      line-height:1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      flex:1;
+    }
 
-    .copy-line{
+    .command-copy{
       font-size:11px;
       padding:8px 14px;
       border-radius:12px;
@@ -449,22 +464,21 @@
       background: rgba(0,255,204,.1);
       color: var(--brand);
       cursor:pointer;
-      font-weight: 600;
+      font-weight:600;
       text-transform: uppercase;
-      letter-spacing: .05em;
+      letter-spacing:.05em;
       transition: all .3s ease;
       font-family: var(--mono);
-      align-self: flex-start;
       white-space: nowrap;
     }
 
-    .copy-line:hover{
+    .command-copy:hover{
       background: rgba(0,255,204,.2);
       box-shadow: 0 0 12px rgba(0,255,204,.4);
       transform: scale(1.03);
     }
 
-    .copy-line.copied{
+    .command-copy.copied{
       background: var(--ok);
       border-color: var(--ok);
       color: var(--bg);
@@ -1218,93 +1232,64 @@ docker buildx build --platform linux/amd64,linux/arm64 -t usuario/miapp:1.0 --pu
     const setupCopyableCommands = () => {
       document.querySelectorAll('pre code').forEach(codeEl => {
         const pre = codeEl.closest('pre');
-        if (!pre) return;
+        if (!pre || pre.dataset.commandsProcessed === 'true') return;
 
         const raw = codeEl.textContent.replace(/\r\n?/g, '\n');
         const lines = raw.split('\n');
-        const groups = [];
-        let currentCommand = [];
 
-        const flushCommand = () => {
-          if (!currentCommand.length) return;
-          const sanitized = currentCommand.map(stripInlineComment);
-          let copyText = sanitized.join('\n');
-          copyText = copyText.replace(/^\n+|\n+$/g, '');
-          if (!copyText.trim()) {
-            currentCommand = [];
-            return;
-          }
-          groups.push({
-            type: 'command',
-            displayLines: [...currentCommand],
-            copyText
-          });
-          currentCommand = [];
-        };
+        const relevant = lines
+          .map(line => line.trim())
+          .filter(line => line && !line.startsWith('#'));
+
+        if (!relevant.length) return;
+
+        const allDocker = relevant.every(line => line.toLowerCase().startsWith('docker '));
+        if (!allDocker) return;
+
+        pre.dataset.commandsProcessed = 'true';
+        pre.classList.add('cmd-pre');
+        pre.innerHTML = '';
+
+        const list = document.createElement('div');
+        list.className = 'command-lines';
 
         lines.forEach(line => {
-          const trimmed = line.trim();
-          if (trimmed === '') {
-            flushCommand();
-            groups.push({ type: 'empty', displayLines: [''] });
-            return;
-          }
-
-          if (trimmed.startsWith('#')) {
-            flushCommand();
-            groups.push({ type: 'comment', displayLines: [line] });
-            return;
-          }
-
-          currentCommand.push(line);
-          const continues = /[\\|]\s*$/.test(trimmed);
-          if (!continues) {
-            flushCommand();
-          }
-        });
-
-        flushCommand();
-
-        pre.innerHTML = '';
-        const list = document.createElement('div');
-        list.className = 'code-lines';
-
-        groups.forEach(group => {
           const row = document.createElement('div');
-          row.classList.add('code-line');
-          const codeLine = document.createElement('code');
+          row.className = 'command-row';
 
-          if (group.type === 'empty') {
-            row.classList.add('is-empty');
-            codeLine.textContent = '\u00A0';
+          const text = document.createElement('span');
+          text.className = 'command-text';
+          text.textContent = line || '\u00A0';
+          row.appendChild(text);
+
+          const trimmed = line.trim();
+
+          if (!trimmed) {
+            row.classList.add('is-gap');
+          } else if (trimmed.startsWith('#')) {
+            row.classList.add('is-comment');
           } else {
-            codeLine.textContent = group.displayLines.join('\n');
-            if (group.type === 'comment') {
-              row.classList.add('is-comment');
+            const copyText = stripInlineComment(line).trim();
+            if (copyText) {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'command-copy';
+              btn.textContent = 'copiar';
+              btn.addEventListener('click', async () => {
+                try {
+                  await navigator.clipboard.writeText(copyText);
+                  btn.classList.add('copied');
+                  btn.textContent = '✓ copiado';
+                  setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = 'copiar';
+                  }, 1500);
+                } catch (err) {
+                  alert('No se pudo copiar :(');
+                }
+              });
+              row.appendChild(btn);
             }
-          }
-
-          row.appendChild(codeLine);
-
-          if (group.type === 'command' && group.copyText) {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'copy-line';
-            btn.textContent = 'copiar';
-            btn.addEventListener('click', async () => {
-              try {
-                await navigator.clipboard.writeText(group.copyText);
-                btn.classList.add('copied');
-                btn.textContent = '✓ copiado';
-                setTimeout(() => {
-                  btn.classList.remove('copied');
-                  btn.textContent = 'copiar';
-                }, 1500);
-              } catch (err) {
-                alert('No se pudo copiar :(');
-              }
-            });
-            row.appendChild(btn);
           }
 
           list.appendChild(row);
